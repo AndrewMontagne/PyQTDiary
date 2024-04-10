@@ -80,6 +80,12 @@ class Diary(QtWidgets.QWidget):
                     ["Italics", self.toggleItalics, QtGui.QKeySequence.Italic],
                     ["Underline", self.toggleUnderline, QtGui.QKeySequence.Underline]
                 ]
+            ],
+            ["Go", [
+                    ["Yesterday", self.previousDate, "Ctrl+,"],
+                    ["Tomorrow", self.nextDate, "Ctrl+."],
+                    ["Today", self.today, "Ctrl+T"],
+                ]
             ]
         ]
 
