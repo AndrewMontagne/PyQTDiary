@@ -24,6 +24,7 @@ class Diary(QtWidgets.QWidget):
         self.textedit.setAutoFormatting(QtWidgets.QTextEdit.AutoFormattingFlag.AutoAll)
         self.textedit.setMarkdown(self.loadDiary())
         self.textedit.zoomIn(2)
+        self.dirty_editor = 0
 
         self.prevButton = QtWidgets.QPushButton("<<")
         self.nextButton = QtWidgets.QPushButton(">>")
@@ -57,22 +58,27 @@ class Diary(QtWidgets.QWidget):
 
         self.mainWindow.setWindowTitle("PyQTDiary")
 
+        self.autosave = QtCore.QTimer()
+        self.autosave.setInterval(1000)
+        self.autosave.timeout.connect(self.doAutosave)
+        self.autosave.start()
+
         # Menubar
 
         menuBar = self.mainWindow.menuBar()
 
         menus = [
             ["File", [
-                    ["Save", self.save, "Ctrl+s"],
-                    ["Quit", self.quit, "Ctrl+q"]
+                    ["Save", self.save, QtGui.QKeySequence.Save],
+                    ["Quit", self.quit, QtGui.QKeySequence.Quit]
                 ]
             ],
             ["Edit", [
-                    ["Undo", self.textedit.undo, "Ctrl+z"],
-                    ["Redo", self.textedit.redo, "Ctrl+y"],
-                    ["Bold", self.toggleBold, "Ctrl+b"],
-                    ["Italics", self.toggleItalics, "Ctrl+i"],
-                    ["Underline", self.toggleUnderline, "Ctrl+u"]
+                    ["Undo", self.textedit.undo, QtGui.QKeySequence.Undo],
+                    ["Redo", self.textedit.redo, QtGui.QKeySequence.Redo],
+                    ["Bold", self.toggleBold, QtGui.QKeySequence.Bold],
+                    ["Italics", self.toggleItalics, QtGui.QKeySequence.Italic],
+                    ["Underline", self.toggleUnderline, QtGui.QKeySequence.Underline]
                 ]
             ]
         ]
@@ -88,6 +94,13 @@ class Diary(QtWidgets.QWidget):
 
         self.updateLabel()
         self.mainWindow.setCentralWidget(self)
+
+    @QtCore.Slot()
+    def doAutosave(self):
+        if self.dirty_editor == 1:
+            self.save()
+        elif self.dirty_editor > 0:
+            self.dirty_editor -= 1
 
     @QtCore.Slot()
     def toggleBold(self):
@@ -109,6 +122,7 @@ class Diary(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def selectionChanged(self):
+        self.dirty_editor = 5
         if self.justDidAction:
             self.justDidAction = False
             return
@@ -119,11 +133,13 @@ class Diary(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def quit(self):
+        self.save()
         self.mainWindow.close()
 
     @QtCore.Slot()
     def save(self):
         self.saveDiary(self.textedit.toMarkdown())
+        self.dirty_editor = 0
 
     @QtCore.Slot()
     def previousDate(self):
